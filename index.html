@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Presentación IDAT - Sesión 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:      #FFC820;
+    --dark:    #111827;
+    --muted:   #374151;
+    --card:    #ffffff;
+    --border:  rgba(17,24,39,.1);
+    --radius:  16px;
+    --shadow:  0 4px 20px rgba(17,24,39,.08);
+    --footer-h: 80px;
+  }
+  
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f4f4f5; 
+    color: var(--dark);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden; /* Evita el scroll global, se maneja por slide */
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Contenedor Principal de la Presentación */
+  .presentation-area {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--footer-h));
+    overflow: hidden;
+  }
+
+  /* Diapositivas */
+  .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 40px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(20px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    z-index: 10;
+  }
+
+  .slide.exit-left {
+    transform: translateX(-20px);
+  }
+
+  /* Layouts comunes */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .center-content {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Tipografía */
+  h1 { font-size: 56px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px; }
+  h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;}
+  h2::before { content: ''; display: block; width: 12px; height: 40px; background: var(--bg); border-radius: 4px; }
+  h3 { font-size: 24px; font-weight: 800; margin-bottom: 15px; }
+  p { font-size: 20px; line-height: 1.6; color: var(--muted); margin-bottom: 20px; }
+  
+  .highlight { color: var(--bg); background: var(--dark); padding: 4px 12px; border-radius: 8px; display: inline-block;}
+  .eyebrow { font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  /* Elementos visuales (Tarjetas, Códigos, etc) */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; width: 100%; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
+  
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-dark {
+    background: var(--dark);
+    color: white;
+  }
+  .card-dark p { color: rgba(255,255,255,0.8); }
+
+  .agenda-list { list-style: none; counter-reset: agenda-counter; }
+  .agenda-list li {
+    font-size: 24px;
+    font-weight: 700;
+    background: white;
+    padding: 20px 30px;
+    margin-bottom: 15px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    border-left: 6px solid var(--bg);
+  }
+  .agenda-list li::before {
+    counter-increment: agenda-counter;
+    content: counter(agenda-counter);
+    background: var(--dark);
+    color: var(--bg);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 20px;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  code {
+    font-family: monospace;
+    background: rgba(17,24,39,0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #dc2626;
+  }
+
+  pre {
+    background: var(--dark);
+    color: #e5e7eb;
+    padding: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 16px;
+    line-height: 1.5;
+    border-left: 4px solid var(--bg);
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  .tag { color: #f87171; }
+  .attr { color: #60a5fa; }
+  .val { color: #a7f3d0; }
+
+  /* Footer de Navegación */
+  footer {
+    height: var(--footer-h);
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    position: relative;
+    z-index: 100;
+  }
+
+  .footer-left {
+    position: absolute;
+    left: 40px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--muted);
+    background: #f4f4f5;
+    padding: 6px 16px;
+    border-radius: 100px;
+  }
+
+  .footer-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .nav-btn {
+    background: var(--dark);
+    color: var(--bg);
+    border: none;
+    height: 44px;
+    padding: 0 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  .nav-btn:hover:not(:disabled) { transform: scale(1.05); }
+  .nav-btn:active:not(:disabled) { transform: scale(0.95); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  
+  .progress-bar-container {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 3px;
+    background: transparent;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--bg);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Barra de progreso superior -->
+<div class="progress-bar-container"><div class="progress-bar" id="progress"></div></div>
+
+<div class="presentation-area" id="presentation">
+  
+  <!-- Slide 1: Portada -->
+  <section class="slide center-content">
+    <div class="container center-content">
+      <div class="eyebrow" style="background: var(--dark); color: white; padding: 6px 16px; border-radius: 100px; display: inline-block; margin-bottom: 20px;">Sesión 8</div>
+      <h1 style="max-width: 900px; font-size: 64px;">Maquetación Avanzada,<br><span class="highlight">Optimización</span> y Brief</h1>
+      <p style="font-size: 24px; font-weight: 500; margin-top: 20px;">Profesor: <strong>Ing. Jhon Chavez</strong></p>
+      
+      <div style="margin-top: 60px; opacity: 0.5;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: Agenda -->
+  <section class="slide">
+    <div class="container">
+      <h2>Agenda de la Sesión</h2>
+      <div style="max-width: 800px; width: 100%; margin: 40px auto;">
+        <ul class="agenda-list">
+          <li>El Brief del Proyecto</li>
+          <li>Vínculos a correos, archivos y teléfonos</li>
+          <li>DIV como contenedor genérico</li>
+          <li>Formatos modernos (WebP, SVG vs PNG/JPG)</li>
+          <li>Optimización de recursos visuales</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: El Brief del Proyecto -->
+  <section class="slide">
+    <div class="container">
+      <h2>1. El Brief del Proyecto</h2>
+      <div class="grid-2" style="margin-top: 20px;">
+        <div class="card">
+          <h3>¿Qué es?</h3>
+          <p>Es el documento fundacional de cualquier proyecto web. Actúa como un puente de comunicación entre el cliente y el equipo de desarrollo/diseño.</p>
+          <p>Sin un brief claro, el proyecto carece de dirección y es propenso a constantes cambios ("scope creep").</p>
+        </div>
+        <div class="card card-dark">
+          <h3 style="color: var(--bg);">Elementos Clave</h3>
+          <ul style="list-style: none; font-size: 18px; line-height: 1.8; margin-top: 15px;">
+            <li>🎯 <strong>Objetivos del proyecto:</strong> ¿Qué queremos lograr?</li>
+            <li>👥 <strong>Público Objetivo:</strong> ¿A quién nos dirigimos?</li>
+            <li>⚙️ <strong>Requerimientos Técnicos:</strong> Integraciones, hosting.</li>
+            <li>🎨 <strong>Guía de Estilo:</strong> Colores, tipografías, tono.</li>
+            <li>📅 <strong>Cronograma e Hitos:</strong> Fechas de entrega.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Vínculos Especiales -->
+  <section class="slide">
+    <div class="container">
+      <h2>2. Vínculos Avanzados</h2>
+      <p>La etiqueta <code>&lt;a&gt;</code> no solo sirve para navegar entre páginas HTML. Cambiando el protocolo en el atributo <code>href</code>, podemos interactuar con el sistema operativo del usuario.</p>
+      
+      <div class="grid-2">
+        <div class="card">
+          <h3>Correos (mailto)</h3>
+          <p>Abre el cliente de correo predeterminado del usuario.</p>
+<pre><code><span class="tag">&lt;a</span> <span class="attr">href=</span><span class="val">"mailto:hola@idat.edu.pe"</span><span class="tag">&gt;</span>
+  Enviar un correo
+<span class="tag">&lt;/a&gt;</span></code></pre>
+        </div>
+        <div class="card">
+          <h3>Teléfonos (tel)</h3>
+          <p>Inicia una llamada (muy útil en dispositivos móviles).</p>
+<pre><code><span class="tag">&lt;a</span> <span class="attr">href=</span><span class="val">"tel:+51999888777"</span><span class="tag">&gt;</span>
+  Llámanos ahora
+<span class="tag">&lt;/a&gt;</span></code></pre>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 20px; border-left: 6px solid #2563eb;">
+        <h3>Descarga de Archivos (download)</h3>
+        <p>Añadiendo el atributo booleano <code>download</code>, forzamos la descarga del archivo en lugar de que el navegador intente abrirlo.</p>
+<pre><code><span class="tag">&lt;a</span> <span class="attr">href=</span><span class="val">"assets/silabo.pdf"</span> <span class="attr">download</span><span class="tag">&gt;</span>Descargar Sílabo (PDF)<span class="tag">&lt;/a&gt;</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: DIV como contenedor -->
+  <section class="slide">
+    <div class="container">
+      <h2>3. DIV como Contenedor Genérico</h2>
+      <div class="grid-2" style="align-items: center;">
+        <div>
+          <p>El elemento <code>&lt;div&gt;</code> (División) es el contenedor a nivel de bloque más utilizado en HTML. <strong>No tiene ningún significado semántico</strong> por sí mismo.</p>
+          <ul style="margin-left: 20px; margin-bottom: 20px; line-height: 1.8; font-size: 18px;">
+            <li>Se utiliza puramente para <strong>agrupar</strong> otros elementos.</li>
+            <li>Ideal para aplicar estilos CSS (usando <code>class</code> o <code>id</code>).</li>
+            <li>Fundamental para crear layouts (estructuras de filas y columnas) con Flexbox o CSS Grid.</li>
+            <li><em>Nota: Siempre prioriza etiquetas semánticas (header, main, section) antes de usar un div.</em></li>
+          </ul>
+        </div>
+        
+        <div class="card" style="background: #e5e7eb; border: 2px dashed #9ca3af;">
+          <div style="font-family: monospace; color: #4b5563; margin-bottom: 10px;">&lt;div class="tarjeta"&gt;</div>
+          <div class="card" style="margin-bottom: 10px;">
+            <div style="width: 100%; height: 100px; background: #cbd5e1; border-radius: 8px; margin-bottom: 10px;"></div>
+            <h3>Título de la tarjeta</h3>
+            <p style="font-size: 14px;">El div envuelve la imagen simulada, este título y este párrafo, permitiendo moverlos y estilizarlos como un solo bloque.</p>
+          </div>
+          <div style="font-family: monospace; color: #4b5563;">&lt;/div&gt;</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Formatos Modernos -->
+  <section class="slide">
+    <div class="container">
+      <h2>4. Formatos de Imagen Modernos</h2>
+      <p>Elegir el formato correcto es crucial para la calidad visual y el rendimiento web.</p>
+      
+      <div class="grid-3" style="margin-top: 30px;">
+        <div class="card">
+          <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
+          <h3>PNG / JPG</h3>
+          <p><strong>Los Clásicos</strong></p>
+          <p style="font-size: 16px;"><strong>JPG:</strong> Ideal para fotografías. No soporta transparencia. Compresión con pérdida.<br><br><strong>PNG:</strong> Soporta transparencia (canal Alpha). Compresión sin pérdida pero archivos más pesados.</p>
+        </div>
+        
+        <div class="card card-dark" style="border: 2px solid var(--bg);">
+          <div style="font-size: 40px; margin-bottom: 10px;">⚡</div>
+          <h3 style="color: var(--bg);">WebP</h3>
+          <p><strong>El Estándar Moderno</strong></p>
+          <p style="font-size: 16px;">Creado por Google. Ofrece compresión con y sin pérdida, y soporta transparencia.<br><br>Archivos hasta un <strong>30% más pequeños</strong> que JPG/PNG con la misma calidad visual.</p>
+        </div>
+
+        <div class="card">
+          <div style="font-size: 40px; margin-bottom: 10px;">📐</div>
+          <h3>SVG</h3>
+          <p><strong>Gráficos Vectoriales</strong></p>
+          <p style="font-size: 16px;">Basado en código XML (matemáticas, no píxeles).<br><br><strong>Escalabilidad infinita</strong> sin perder calidad. Perfecto para logotipos, iconos e ilustraciones planas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: Optimización -->
+  <section class="slide">
+    <div class="container">
+      <h2>5. Optimización de Recursos Visuales</h2>
+      <div class="grid-2">
+        <div>
+          <p>Las imágenes suelen ser el recurso que más ancho de banda consume en una página web. La optimización es obligatoria para un buen UX y SEO.</p>
+          
+          <div class="card" style="margin-bottom: 20px;">
+            <h3 style="font-size: 18px; display: flex; align-items: center; gap: 10px;">
+              <span style="background:var(--bg); width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold;">1</span>
+              Dimensiones Exactas
+            </h3>
+            <p style="font-size: 16px; margin-bottom: 0;">No cargues una imagen de 4000x3000px si solo la vas a mostrar en un recuadro de 400x300px. Redimensiona antes de subir.</p>
+          </div>
+          
+          <div class="card">
+            <h3 style="font-size: 18px; display: flex; align-items: center; gap: 10px;">
+              <span style="background:var(--bg); width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold;">2</span>
+              Herramientas de Compresión
+            </h3>
+            <p style="font-size: 16px; margin-bottom: 0;">Usa herramientas como TinyPNG o Squoosh para reducir el peso del archivo sin que el ojo humano note la diferencia.</p>
+          </div>
+        </div>
+
+        <div class="card card-dark">
+          <h3 style="color: var(--bg);">Carga Diferida (Lazy Loading)</h3>
+          <p style="font-size: 16px;">Añade el atributo <code>loading="lazy"</code> a tus imágenes. Esto le dice al navegador que solo descargue la imagen cuando esté a punto de aparecer en la pantalla del usuario, ahorrando datos y tiempo de carga inicial.</p>
+<pre style="background: #1f2937;"><code><span class="tag">&lt;img</span> 
+  <span class="attr">src=</span><span class="val">"foto-optimizada.webp"</span> 
+  <span class="attr">alt=</span><span class="val">"Descripción SEO"</span> 
+  <span class="attr">loading=</span><span class="val">"lazy"</span>
+<span class="tag">&gt;</span></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Gracias -->
+  <section class="slide center-content" style="background: var(--bg); color: var(--dark);">
+    <div class="container center-content">
+      <h1 style="font-size: 80px;">¡Gracias!</h1>
+      <p style="color: var(--dark); font-weight: 600; font-size: 24px;">¿Alguna pregunta sobre la sesión de hoy?</p>
+      
+      <div style="margin-top: 40px; display: flex; gap: 20px;">
+        <span style="background: white; padding: 8px 24px; border-radius: 100px; font-weight: 800; box-shadow: var(--shadow);">IDAT 2026</span>
+        <span style="background: var(--dark); color: white; padding: 8px 24px; border-radius: 100px; font-weight: 800;">Desarrollo Web</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Footer de Controles -->
+<footer>
+  <div class="footer-left" id="slide-counter">Diapositiva 1 de X</div>
+  
+  <div class="footer-center">
+    <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Anterior
+    </button>
+    <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">
+      Siguiente
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</footer>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counterEl = document.getElementById('slide-counter');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const progressBar = document.getElementById('progress');
+  
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+
+  function updateUI() {
+    // Actualizar clases de slides
+    slides.forEach((slide, index) => {
+      slide.classList.remove('active', 'exit-left');
+      if (index === currentSlide) {
+        slide.classList.add('active');
+      } else if (index < currentSlide) {
+        slide.classList.add('exit-left'); // Slides anteriores se van hacia la izquierda
+      }
+    });
+
+    // Actualizar contador
+    counterEl.textContent = `Presentación: ${currentSlide + 1} de ${totalSlides}`;
+
+    // Actualizar barra de progreso
+    const progress = ((currentSlide + 1) / totalSlides) * 100;
+    progressBar.style.width = `${progress}%`;
+
+    // Estado de botones
+    btnPrev.disabled = currentSlide === 0;
+    
+    if (currentSlide === totalSlides - 1) {
+      btnNext.disabled = true;
+      btnNext.innerHTML = 'Finalizado';
+    } else {
+      btnNext.disabled = false;
+      btnNext.innerHTML = 'Siguiente <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+  }
+
+  function changeSlide(direction) {
+    const nextSlide = currentSlide + direction;
+    if (nextSlide >= 0 && nextSlide < totalSlides) {
+      currentSlide = nextSlide;
+      updateUI();
+    }
+  }
+
+  // Navegación con teclado
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'Space') {
+      changeSlide(1);
+    } else if (e.key === 'ArrowLeft') {
+      changeSlide(-1);
+    }
+  });
+
+  // Inicializar
+  updateUI();
+</script>
+
+</body>
+</html>
